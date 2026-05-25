@@ -1,19 +1,7 @@
-# 🚀 Spam Detection System
+🚀 Spam Detection System
+A full-stack application that detects Spam / Smishing / Offensive content using Machine Learning. The system includes a Python-based ML engine, a Node.js backend, a React web interface, and a cross-platform React Native mobile application.
 
-A full-stack application that detects **Spam / Smishing / Offensive content** using Machine Learning.
-The system includes:
-
-* 🧠 ML Model (Python)
-* ⚡ Python API (Flask / FastAPI)
-* 🌐 Node.js Backend
-* 💻 React Web App
-* 📱 React Native Mobile App (Android & iOS)
-
----
-
-## 📌 Project Architecture
-
-```
+📌 Project Architecture
 User Input (Web / Mobile)
         ↓
 React / React Native UI
@@ -23,79 +11,31 @@ Node.js Backend (API Gateway)
 Python ML API (Model Inference)
         ↓
 Prediction (Spam / Ham / Offensive)
-```
+⚙️ Environment Configuration
+To run this project, you need to configure your environment variables for different platforms. Create a .env file in the root directory:
 
----
+Plaintext
+# For Mobile (Expo)
+EXPO_PUBLIC_ANDROIDAPI=http://<YOUR_PC_IP>:5000/predict
+EXPO_PUBLIC_IOSAPI=http://<YOUR_PC_IP>:5000/predict
 
-## 🧠 Machine Learning Model
+# For Web
+VITE_API_URI=http://localhost:5000/predict
+Note: Replace <YOUR_PC_IP> with your machine's local IPv4 address (e.g., 192.168.100.50).
 
-### 📊 Dataset
+🧠 Machine Learning Model
+📊 Dataset
+CSV format: text / label (spam / ham / offensive).
 
-* CSV format:
+⚙️ Algorithms Used
+Logistic Regression, Naive Bayes, Linear SVM (Best Accuracy).
 
-  * `text` / `message`
-  * `label` (spam / ham / offensive)
-
-### ⚙️ Algorithms Used
-
-* Logistic Regression
-* Naive Bayes
-* Linear SVM (Best Accuracy)
-
-### 📈 Performance
-
-* Accuracy: ~97–98%
-* Metrics:
-
-  * Precision
-  * Recall
-  * F1-score
-  * Confusion Matrix
-
----
-
-### 🏋️ Model Training (Python)
-
-```python
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import LinearSVC
-import pickle
-
-# Load dataset
-X = df['text']
-y = df['label']
-
-# Vectorization
-vectorizer = TfidfVectorizer()
-X_vec = vectorizer.fit_transform(X)
-
-# Model
-model = LinearSVC()
-model.fit(X_vec, y)
-
-# Save
-pickle.dump(model, open("model.pkl", "wb"))
-pickle.dump(vectorizer, open("vectorizer.pkl", "wb"))
-```
-
----
-
-## 🐍 Python API (Flask)
-
-### 📦 Install Dependencies
-
-```bash
-pip install flask scikit-learn
-```
-
-### 🚀 API Code
-
-```python
+🐍 Python API (Flask)
+Python
 from flask import Flask, request, jsonify
 import pickle
 
 app = Flask(__name__)
-
 model = pickle.load(open("model.pkl", "rb"))
 vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
 
@@ -104,166 +44,60 @@ def predict():
     data = request.json['text']
     vec = vectorizer.transform([data])
     prediction = model.predict(vec)[0]
-    return jsonify({"result": prediction})
+    return jsonify({"prediction": prediction})
 
 if __name__ == "__main__":
     app.run(port=5000)
-```
+🌐 Node.js Backend
+The Node.js server acts as an API gateway. Ensure your server is configured to listen on 0.0.0.0 for network accessibility.
 
----
-
-## 🌐 Node.js Backend
-
-### 📦 Install
-
-```bash
-npm install express axios cors
-```
-
-### ⚙️ Server Code
-
-```javascript
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
+JavaScript
+// Ensure app.listen(PORT, '0.0.0.0', ...)
 app.post("/predict", async (req, res) => {
   try {
-    const response = await axios.post("http://localhost:5000/predict", {
-      text: req.body.text,
-    });
+    const response = await axios.post("http://localhost:5000/predict", { text: req.body.text });
     res.json(response.data);
-  } catch (err) {
-    res.status(500).send("Error");
-  }
+  } catch (err) { res.status(500).send("Error"); }
 });
+📱 React Native App (Mobile)
+We use a robust getApiUrl utility to handle dynamic environments across Web and Mobile platforms:
 
-app.listen(3000, () => console.log("Node server running"));
-```
+JavaScript
+const getApiUrl = () => {
+  const defaultUrl = "http://192.168.100.50:5000/predict";
+  const androidUrl = process.env.EXPO_PUBLIC_ANDROIDAPI || defaultUrl;
+  const iosUrl = process.env.EXPO_PUBLIC_IOSAPI || defaultUrl;
+  
+  if (Platform.OS === 'web') return (process.env as any).VITE_API_URI;
+  return Platform.OS === 'android' ? androidUrl : iosUrl;
+};
+🔐 Features
+✅ Cross-Platform: Seamlessly works on Web, Android, and iOS.
 
----
+✅ Dynamic Connectivity: Automatic API URL resolution.
 
-## 💻 React Frontend
+✅ Real-time Detection: Immediate classification of input text.
 
-### 📦 Setup
+✅ Diagnostic Logging: Tracks history and classification results.
 
-```bash
-npm create vite@latest
-npm install axios
-```
+🛠 Tech Stack
+ML: Python, Scikit-learn, Flask
 
-### ⚛️ Example Component
+Backend: Node.js, Express, Axios
 
-```javascript
-import { useState } from "react";
-import axios from "axios";
+Frontend: React, React Native (Expo)
 
-function App() {
-  const [text, setText] = useState("");
-  const [result, setResult] = useState("");
+📌 Future Improvements
+Use Deep Learning (LSTM / BERT).
 
-  const handlePredict = async () => {
-    const res = await axios.post("http://localhost:3000/predict", { text });
-    setResult(res.data.result);
-  };
+Multilingual Support.
 
-  return (
-    <div>
-      <h1>Spam Detection</h1>
-      <input onChange={(e) => setText(e.target.value)} />
-      <button onClick={handlePredict}>Check</button>
-      <p>{result}</p>
-    </div>
-  );
-}
+Database integration for persistent history.
 
-export default App;
-```
+Enhanced tracking for phone numbers and suspicious links.
 
----
-
-## 📱 React Native App (Android & iOS)
-
-### 📦 Setup
-
-```bash
-npx create-expo-app
-npm install axios
-```
-
-### 📲 Example Code
-
-```javascript
-import { useState } from "react";
-import { View, Text, TextInput, Button } from "react-native";
-import axios from "axios";
-
-export default function App() {
-  const [text, setText] = useState("");
-  const [result, setResult] = useState("");
-
-  const predict = async () => {
-    const res = await axios.post("http://YOUR_IP:3000/predict", { text });
-    setResult(res.data.result);
-  };
-
-  return (
-    <View>
-      <Text>Spam Detection</Text>
-      <TextInput onChangeText={setText} />
-      <Button title="Check" onPress={predict} />
-      <Text>{result}</Text>
-    </View>
-  );
-}
-```
-
----
-
-## 🔐 Features
-
-* ✅ Spam / Smishing Detection
-* ✅ Offensive Content Classification
-* ✅ Real-time Prediction API
-* ✅ Cross-platform (Web + Mobile)
-* ✅ Scalable Architecture
-
----
-
-## 🛠 Tech Stack
-
-* Python (ML + API)
-* Scikit-learn
-* Flask
-* Node.js
-* Express
-* React
-* React Native
-* Axios
-
----
-
-## 📌 Future Improvements
-
-*  Use Deep Learning (LSTM / BERT / CLIP)
-*  Multilingual Support
-*  More accuracy and advanced model 
-* Include Email predicton perfectly and add mobile numbers also to track
-
----
-
-## 👨‍💻 Author
-
+👨‍💻 Author
 Aditya Sharma
 
----
-
-## ⭐ Contribute
-
+⭐ Contribute
 Feel free to fork, improve and contribute to this project!
-
----

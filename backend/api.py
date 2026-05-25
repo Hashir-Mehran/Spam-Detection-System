@@ -15,28 +15,38 @@ def home():
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({"error": "Invalid JSON layout structure"}), 400
 
-        text = data.get("text")
+        text = data.get("text", "").strip()
         if not text:
             return jsonify({"error": "No text provided"}), 400
 
-    
+        # Feature transformations and predictions
         text_vector = vectorizer.transform([text])
-
-   
         prediction = model.predict(text_vector)
-
-  
         final_output = label_encoder.inverse_transform(prediction)[0]
 
+        # Dynamic mapping for smishing pattern mutations
+        if str(final_output).lower() == "spam" and ("http" in text.lower() or "www." in text.lower()):
+            final_output = "smishing"
+
+        # IMPORTANT: Make sure these keys match what server.js expects!
         return jsonify({
+            "status": "success",
+            "engine": "SVM Linear Kernel Engine",
             "input": text,
-            "prediction": final_output
-        })
+            "prediction": str(final_output)
+        }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        print(f"!!! CRASH IN FLASK PREDICT !!!: {str(e)}")
+        # Return proper JSON structural format with 500 error code
+        return jsonify({
+            "error": "Model prediction computation failed",
+            "details": str(e)
+        }), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000,debug=True)
+    app.run(host="127.0.0.1", port=8000, debug=True)

@@ -35,8 +35,8 @@ app.post("/predict", async (req, res) => {
   }
 });
 
-
+// SAHI: '0.0.0.0' ka matlab hai "network ke har device se connection lo"
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
